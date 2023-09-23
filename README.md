@@ -8,8 +8,8 @@
 - run `yarn start` to let it rip!
 - transcription will write to the generated `output` directory w/ set output title
 
-youtube scraper docs:
-https://youtube-ext.js.org
+## tooling
 
-ffmpeg docs:
-https://ffmpeg.org/documentation.html
+- [youtube extractor](https://youtube-ext.js.org)
+- [ffmpeg](https://ffmpeg.org/documentation.html)
+- [transformers.js](https://huggingface.co/docs/transformers.js/index)
