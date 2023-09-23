@@ -1,4 +1,4 @@
-# youtube miner
+# 📺⛏ youtube miner
 
 > a script mine transcriptions from youtube video streams
 
