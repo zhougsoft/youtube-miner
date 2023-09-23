@@ -10,6 +10,6 @@
 
 ## tooling
 
-- [youtube extractor](https://youtube-ext.js.org)
-- [ffmpeg](https://ffmpeg.org/documentation.html)
+- [ytdl-core](https://github.com/fent/node-ytdl-core)
+- [ffmpeg](https://ffmpeg.org/documentation.html) via [ffmpeg-static](https://github.com/eugeneware/ffmpeg-static)
 - [transformers.js](https://huggingface.co/docs/transformers.js/index)
