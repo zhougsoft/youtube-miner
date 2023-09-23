@@ -5,7 +5,7 @@ import crypto from 'crypto'
 import ffmpegPath from 'ffmpeg-static'
 import fs from 'fs'
 import path from 'path'
-import { videoInfo, getFormats, getReadableStream } from 'youtube-ext'
+import ytdl from 'ytdl-core'
 
 // replace node globals with ESM equivalents
 const __filename = new URL(import.meta.url).pathname
@@ -13,6 +13,7 @@ const __dirname = path.dirname(__filename)
 
 const main = async () => {
   try {
+    // ffmpeg binary is required
     if (!ffmpegPath) throw new Error('ffmpeg binary not found')
 
     console.log('\n🤖 starting job...\n')
@@ -23,20 +24,20 @@ const main = async () => {
       fs.mkdirSync(tempDir)
     }
 
+    // connect to stream
     console.log('\n🔌 connecting stream...\n')
-    const info = await videoInfo(INPUT_VIDEO)
-    const formats = await getFormats(info.stream)
+    const stream = ytdl(INPUT_VIDEO, { filter: 'audioonly' })
 
-    const format = formats.find(x => x.fps && x.audioChannels)
-    if (!format) throw new Error('no valid format found')
-
-    const stream = await getReadableStream(format)
+    // create target file to write stream to
     const videoFilename = `${crypto.randomUUID()}.mp4`
-
     const file = fs.createWriteStream(path.resolve(tempDir, videoFilename))
-    const started = Date.now()
-    let downloaded = 0
 
+    // start streaming data to file
+    stream.pipe(file)
+    const started = Date.now()
+    let bytesStreamed = 0
+
+    // handle errors
     file.on('error', error => {
       throw new Error(error.message)
     })
@@ -44,25 +45,28 @@ const main = async () => {
       throw new Error(error.message)
     })
 
-    stream.pipe(file)
+    // handle progress tracking
     stream.on('data', data => {
-      downloaded += data.length
+      bytesStreamed += data.length
       console.log(
-        `⏬ streaming... ${Math.round(downloaded / 1000).toLocaleString()}kb`
+        `⏬ streaming... ${Math.round(bytesStreamed / 1000).toLocaleString()}kb`
       )
     })
-    stream.on('close', async () => {
+
+    // handle stream completion
+    stream.on('finish', async () => {
       console.log(
         `\n✅ stream complete\n⌚ finished in ${Math.round(
           (Date.now() - started) / 1000
         )} seconds\n`
       )
 
+      // setup paths for ffmpeg audio extraction
       const audioFilename = `${OUTPUT_TITLE}.wav`
       const inputVideoPath = path.join(tempDir, videoFilename)
       const outputAudioPath = path.join(tempDir, audioFilename)
 
-      // run ffmpeg to extract audio from downloaded video
+      // run ffmpeg audio extraction on downloaded video
       console.log('\n👂 extracting audio...\n')
       exec.execFileSync(ffmpegPath, [
         '-loglevel',
@@ -73,13 +77,15 @@ const main = async () => {
         outputAudioPath,
       ])
 
-      // generate transcription from audio file
+      // generate transcription from audio file via transformers (whisper)
       console.log('✍ transcribing...\n')
       const savedTranscriptionPath = await transcribe(outputAudioPath)
 
+      // remove temp files
       console.log('\n🧹 cleaning up...\n')
       exec.execFileSync('rm', ['-r', tempDir])
 
+      // done!
       console.log(
         `🎉 job complete! 🎉\n\n💾 transcription saved to:\n${savedTranscriptionPath}\n\n`
       )

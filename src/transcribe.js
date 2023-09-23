@@ -15,56 +15,59 @@ export const transcribe = async wavFilePath => {
     fs.mkdirSync(outputDir)
   }
 
-  let transcriber = await pipeline('automatic-speech-recognition')
+  // load the wav file from disk
+  const buffer = fs.readFileSync(wavFilePath)
 
-  // load the .wav file from disk
-  let buffer = fs.readFileSync(wavFilePath)
+  // read wav file & convert it to the required format
+  const wav = new wavefile.WaveFile(buffer)
+  wav.toBitDepth('32f') // pipeline expects: Float32Array
+  wav.toSampleRate(16000) // whisper expects sampling rate: 16000
 
-  // read .wav file and convert it to the required format
-  let wav = new wavefile.WaveFile(buffer)
-  wav.toBitDepth('32f') // Pipeline expects input as a Float32Array
-  wav.toSampleRate(16000) // Whisper expects audio with a sampling rate of 16000
+  // parse wav audio data & aggregate channels
   let audioData = wav.getSamples()
-
   if (Array.isArray(audioData)) {
     if (audioData.length > 1) {
       const SCALING_FACTOR = Math.sqrt(2)
 
-      // Merge channels (into the first channel to save memory)
+      // merge both channels into channel #1 to save memory
       for (let i = 0; i < audioData[0].length; ++i) {
         audioData[0][i] =
           (SCALING_FACTOR * (audioData[0][i] + audioData[1][i])) / 2
       }
     }
 
-    // Select the first channel
+    // select channel #1
     audioData = audioData[0]
   }
 
-  let start = performance.now()
-  let output = await transcriber(audioData, {
-    // Greedy
+  // transcription inference options
+  const transcriberOpts = {
     top_k: 0,
     do_sample: false,
-    // Sliding window
     chunk_length_s: 30,
     stride_length_s: 5,
-    // Timestamps
     return_timestamps: false,
     force_full_sequences: false,
-  })
-  let end = performance.now()
-  console.log(`Execution duration: ${(end - start) / 1000} seconds`)
-
-  // Ensure output is a string
-  if (typeof output !== 'string') {
-    output = JSON.stringify(output, null, 2) // Convert to JSON string or use a suitable conversion
   }
 
-  // write transcription to disk
+  // run the transcription inference
+  const start = performance.now()
+  const transcriber = await pipeline('automatic-speech-recognition')
+  let output = await transcriber(audioData, transcriberOpts)
+  const end = performance.now()
+
+  console.log(
+    `⌚ transcription inference duration: ${(end - start) / 1000} seconds`
+  )
+
+  // ensure output is a string
+  if (typeof output !== 'string') {
+    output = JSON.stringify(output)
+  }
+
+  // write transcription result to disk
   const outputFilename = `${OUTPUT_TITLE}.json`
   const outputPath = path.join(outputDir, outputFilename)
   fs.writeFileSync(outputPath, output)
-  
   return outputPath
 }
