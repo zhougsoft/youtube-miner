@@ -4,6 +4,7 @@
 
 ## how to use
 
+- install dependencies: run `yarn`
 - set desired video URL & output title in `config.js`
 - run `yarn start` to let it rip!
 - transcription will write to the generated `output` directory w/ set output title
