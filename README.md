@@ -1,6 +1,6 @@
 # 📺⛏ youtube miner
 
-> a script mine transcriptions from youtube video streams
+> a script for mining transcriptions from youtube video streams - no API keys required 😉
 
 ## how to use
 
