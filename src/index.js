@@ -16,7 +16,7 @@ const main = async () => {
     // ffmpeg binary is required
     if (!ffmpegPath) throw new Error('ffmpeg binary not found')
 
-    console.log('\n🤖 starting job...\n')
+    console.log('\n\n🤖 starting job...\n')
 
     // make sure temp directory exists
     const tempDir = path.join(__dirname, '..', '.temp')
@@ -25,7 +25,7 @@ const main = async () => {
     }
 
     // connect to stream
-    console.log('\n🔌 connecting stream...\n')
+    console.log('🔌 connecting stream...\n')
     const stream = ytdl(INPUT_VIDEO, { filter: 'audioonly' })
 
     // create target file to write stream to
@@ -56,7 +56,7 @@ const main = async () => {
     // handle stream completion
     stream.on('finish', async () => {
       console.log(
-        `\n✅ stream complete\n⌚ finished in ${Math.round(
+        `\n✅⏬ stream complete\n⌚ finished in ${Math.round(
           (Date.now() - started) / 1000
         )} seconds\n`
       )
@@ -67,7 +67,7 @@ const main = async () => {
       const outputAudioPath = path.join(tempDir, audioFilename)
 
       // run ffmpeg audio extraction on downloaded video
-      console.log('\n👂 extracting audio...\n')
+      console.log('👂 extracting audio...\n')
       exec.execFileSync(ffmpegPath, [
         '-loglevel',
         'quiet',
@@ -79,15 +79,22 @@ const main = async () => {
 
       // generate transcription from audio file via transformers (whisper)
       console.log('✍ transcribing...\n')
+      const start = performance.now()
       const savedTranscriptionPath = await transcribe(outputAudioPath)
+      const end = performance.now()
+      console.log(
+        `\n✅✍ transcription complete\n⌚ finished in ${Math.round(
+          (end - start) / 1000
+        )} seconds\n`
+      )
 
       // remove temp files
-      console.log('\n🧹 cleaning up...\n')
+      console.log('🧹 cleaning up...\n')
       exec.execFileSync('rm', ['-r', tempDir])
 
       // done!
       console.log(
-        `🎉 job complete! 🎉\n\n💾 transcription saved to:\n${savedTranscriptionPath}\n\n`
+        `💾 transcription saved to:\n➡ ${savedTranscriptionPath}\n\n🎉 job complete! 🎉\n\n`
       )
       process.exit(0)
     })

@@ -40,25 +40,38 @@ export const transcribe = async wavFilePath => {
     audioData = audioData[0]
   }
 
+  let tokensTranscribed = 0
+
   // transcription inference options
+  // docs: https://huggingface.co/docs/transformers.js/api/pipelines#automaticspeechrecognitionpipelinecallaudio-kwargs-codepromiseampltobjectampgtcode
   const transcriberOpts = {
+    // assuming english for performance
+    language: 'en',
+    // "greedy" decoding
     top_k: 0,
     do_sample: false,
+    // chunking required for transcribing audio longer than 30 seconds
     chunk_length_s: 30,
     stride_length_s: 5,
+    // output formatting
     return_timestamps: false,
     force_full_sequences: false,
+    // called with each chunk processed
+    chunk_callback: data => {
+      tokensTranscribed += data.tokens.length
+      console.log(
+        `📝 chunk completed...`,
+        `${tokensTranscribed.toLocaleString()} tokens transcribed`
+      )
+    },
   }
 
   // run the transcription inference
-  const start = performance.now()
-  const transcriber = await pipeline('automatic-speech-recognition')
-  let output = await transcriber(audioData, transcriberOpts)
-  const end = performance.now()
-
-  console.log(
-    `⌚ transcription inference duration: ${(end - start) / 1000} seconds`
+  const transcriber = await pipeline(
+    'automatic-speech-recognition',
+    'Xenova/whisper-small.en'
   )
+  let output = await transcriber(audioData, transcriberOpts)
 
   // ensure output is a string
   if (typeof output !== 'string') {
