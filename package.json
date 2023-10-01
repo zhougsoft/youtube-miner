@@ -8,13 +8,14 @@
   "private": true,
   "scripts": {
     "start": "node ./src/index.js",
-    "clean": "rimraf ./.temp ./output"
+    "clean": "rimraf ./temp ./output"
   },
   "dependencies": {
     "@xenova/transformers": "^2.6.1",
     "ffmpeg-static": "^5.2.0",
     "rimraf": "^5.0.1",
     "wavefile": "^11.0.0",
+    "youtube-transcript": "^1.0.6",
     "ytdl-core": "^4.11.5"
   }
 }
