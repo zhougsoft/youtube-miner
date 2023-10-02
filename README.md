@@ -5,7 +5,7 @@
 ## how to use
 
 1. install dependencies: run `yarn`
-1. set your desired config in `src/index.js`
+1. set your desired settings in `src/index.js`
 1. run `yarn start` & let it rip!
 
 ## tooling
