@@ -9,11 +9,17 @@ import exec from 'child_process'
 // link or id for the video to download, saves to `output/output.mp4`
 const INPUT_VIDEO = 'https://www.youtube.com/watch?v=vaNpcgmj5qI'
 
+// will download the highest available quality video/audio channels & merge them
+// ⚠ WARNING: use sparingly, i get rate-limited around ~1gb of data streamed (higher quality == more data)
+const GET_HIGHEST_QUALITY = false
+
 // want the transcription too? saves to `output/transcription.json`
 const GET_TRANSCRIPTION = true
 
-// will download the highest available quality video/audio channels & merge them
-const GET_HIGHEST_QUALITY = true
+// overrides the media downloading (if you only want the transcription)
+const GET_TRANSCRIPTION_ONLY = false
+
+// TODO: add option for downloading audio only 🔉
 
 // ===============================================================
 
@@ -26,6 +32,7 @@ const main = async () => {
     if (GET_TRANSCRIPTION) {
       const transcriptionPath = await transcribe(INPUT_VIDEO)
       console.log(`\ntranscription saved to: ${transcriptionPath}\n`)
+      if (GET_TRANSCRIPTION_ONLY) process.exit(0)
     }
 
     const outputPath = `${OUTPUT_DIRNAME}/output.mp4`
