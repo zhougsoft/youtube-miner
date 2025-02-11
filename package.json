@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
-    "rimraf": "^5.0.1",
-    "youtube-transcript": "^1.0.6",
+    "rimraf": "^6.0.1",
+    "youtube-transcript": "^1.2.1",
     "ytdl-core": "^4.11.5"
   }
 }
